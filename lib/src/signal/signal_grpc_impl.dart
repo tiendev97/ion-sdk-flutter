@@ -128,4 +128,10 @@ class GRPCWebSignal extends Signal {
         ..init = _jsonEncoder.convert(trickle.candidate.toMap()));
     _requestStream.add(reply);
   }
+
+  @override
+  void call(String key, data) {
+    // TODO: implement send
+  }
 }
+
