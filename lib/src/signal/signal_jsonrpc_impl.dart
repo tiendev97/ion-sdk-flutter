@@ -18,7 +18,10 @@ class JsonRPCSignal extends Signal {
 
     _socket.onClose = (int code, String reason) => onclose?.call(code, reason);
 
-    _socket.onMessage = (msg) => _onmessage(msg);
+    _socket.onMessage = (msg) {
+      _onmessage(msg);
+      onMessage?.call(msg);
+    };
   }
 
   final String _uri;
@@ -27,6 +30,8 @@ class JsonRPCSignal extends Signal {
   final Uuid _uuid = Uuid();
   final EventEmitter _emitter = EventEmitter();
   SimpleWebSocket _socket;
+
+  SimpleWebSocket get socket => _socket;
 
   void _onmessage(msg) {
     log.debug('msg: $msg');
@@ -73,6 +78,7 @@ class JsonRPCSignal extends Signal {
 
     Function(dynamic) handler;
     handler = (resp) {
+      print('resp $resp');
       if (resp['id'] == id) {
         completer.complete(RTCSessionDescription(
             resp['result']['sdp'], resp['result']['type']));
@@ -99,7 +105,7 @@ class JsonRPCSignal extends Signal {
             resp['result']['sdp'], resp['result']['type']));
       }
     };
-    _emitter.once('message', handler);
+    _emitter.on('message', handler);
     return completer.future;
   }
 
@@ -118,4 +124,13 @@ class JsonRPCSignal extends Signal {
       'params': trickle.toMap(),
     }));
   }
+
+  @override
+  void call(String key, data) {
+    _socket.send(_jsonEncoder.convert(<String, dynamic>{
+      'method': 'authenticate',
+      'params': data,
+    }));
+  }
 }
+
