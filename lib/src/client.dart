@@ -71,11 +71,20 @@ class Client {
       client.ontrack?.call(ev.track, remote);
     };
 
+    client.transports[RoleSub].pc.onRemoveStream = (MediaStream mediaStream) {
+      client.onRemoveStream?.call(mediaStream);
+    };
+
+    client.transports[RoleSub].pc.onRemoveTrack =
+        (MediaStream mediaStream, MediaStreamTrack track) {
+      client.onRemoveTrack?.call(mediaStream,track);
+    };
+
     client.signal.onnegotiate = (desc) => client.negotiate(desc);
     client.signal.ontrickle = (trickle) => client.trickle(trickle);
     client.signal.onready = () async {
       if (!client.initialized) {
-        client.join(sid);
+        // client.join(sid);
         client.initialized = true;
       }
     };
@@ -85,15 +94,27 @@ class Client {
 
   static final defaultConfig = {
     'iceServers': [
-      //{'urls': 'stun:stun.stunprotocol.org:3478'}
+      {
+        // 'urls': 'stun:stun.stunprotocol.org:3478',
+        'urls': [
+          'stun:stun.l.google.com:19302',
+          'stun:stun1.l.google.com:19302',
+          'stun:stun2.l.google.com:19302',
+          'stun:stun3.l.google.com:19302',
+          'stun:stun4.l.google.com:19302',
+        ]
+      }
     ],
-    'sdpSemantics': 'unified-plan'
+    'sdpSemantics': 'unified-plan',
+    'codec': 'vp8',
   };
 
   bool initialized = false;
   Signal signal;
   Map<int, Transport> transports = {};
   Function(MediaStreamTrack track, RemoteStream stream) ontrack;
+  Function(MediaStream stream) onRemoveStream;
+  Function(MediaStream stream, MediaStreamTrack track) onRemoveTrack;
 
   Future<List<StatsReport>> getPubStats(MediaStreamTrack selector) {
     return transports[RolePub].pc.getStats(selector);
@@ -105,7 +126,7 @@ class Client {
 
   Future<void> publish(LocalStream stream) async {
     await stream.publish(transports[RolePub].pc);
-    await onnegotiationneeded();
+    // await onnegotiationneeded();
   }
 
   void close() {
@@ -116,13 +137,12 @@ class Client {
     signal.close();
   }
 
-  void join(String sid) async {
+  Future<void> join(String sid) async {
     try {
       var pc = transports[RolePub].pc;
       var offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       var answer = await signal.join(sid, offer);
-
       await pc.setRemoteDescription(answer);
       transports[RolePub].candidates.forEach((c) => pc.addCandidate(c));
       pc.onRenegotiationNeeded = () => onnegotiationneeded();
@@ -148,7 +168,7 @@ class Client {
       await pc.setLocalDescription(answer);
       signal.answer(answer);
     } catch (err) {
-      log.error(err);
+      print('negotiate err = $err');
     }
   }
 
@@ -164,3 +184,4 @@ class Client {
     }
   }
 }
+
