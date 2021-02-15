@@ -21,6 +21,7 @@ typedef OnNegotiateCallback = Function(RTCSessionDescription jsep);
 typedef OnReadyCallback = Function();
 typedef OnTrickleCallback = Function(Trickle trickle);
 typedef OnCloseCallback = Function(int code, String reason);
+typedef OnMessageCallback = Function(dynamic data);
 
 abstract class Signal {
   OnNegotiateCallback onnegotiate;
@@ -30,6 +31,8 @@ abstract class Signal {
   OnCloseCallback onclose;
 
   OnTrickleCallback ontrickle;
+
+  OnMessageCallback onMessage;
 
   Future<RTCSessionDescription> join(String sid, RTCSessionDescription offer);
 
@@ -42,4 +45,6 @@ abstract class Signal {
   void connect();
 
   void close();
+
+  void call(String key, dynamic data);
 }
