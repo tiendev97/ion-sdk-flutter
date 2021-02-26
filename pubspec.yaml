@@ -12,6 +12,7 @@ dependencies:
   protobuf: ^1.0.1
   uuid: ^2.0.1
   web_socket_channel: 1.1.0
+  sdp_transform: ^0.2.0
 
 dev_dependencies:
   flutter_test:
