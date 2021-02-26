@@ -1,6 +1,7 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:sdp_transform/sdp_transform.dart';
 
 import 'logger.dart';
 import 'signal/signal.dart';
@@ -176,6 +177,30 @@ class Client {
     try {
       var pc = transports[RolePub].pc;
       var offer = await pc.createOffer();
+      
+            if(Platform.isIOS){
+        final map = parse(offer.sdp);
+
+        var payloads = parsePayloads(map['media'][2]['payloads']);
+
+        String newPayLoads = '';
+
+        payloads.forEach((e) {
+          if(e != '100'){
+            newPayLoads = newPayLoads + ' $e';
+          }
+        });
+
+        newPayLoads = '100' + newPayLoads;
+
+        map['media'][2]['payloads'] = newPayLoads;
+
+        var sdp = write(map, null);
+
+        offer.sdp = sdp;
+      }
+
+      
       await pc.setLocalDescription(offer);
       var answer = await signal.offer(offer);
       await pc.setRemoteDescription(answer);
