@@ -128,7 +128,7 @@ class JsonRPCSignal extends Signal {
   @override
   void call(String key, data) {
     _socket.send(_jsonEncoder.convert(<String, dynamic>{
-      'method': 'authenticate',
+      'method': key,
       'params': data,
     }));
   }
